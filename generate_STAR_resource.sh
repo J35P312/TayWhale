@@ -11,10 +11,9 @@
 
 #howto: make a directory where you want to put your genome resources. cd into that directory, and run this script.
 #./generate_STAR_resource.sh GTF genome.fa
-#rememberr to change the STAR_FUSION_DIR_parameter!
+#remember to change the STAR_FUSION_DIR_parameter!
 
 STAR_FUSION_DIR=../STAR-Fusion-v1.2.0/
-module load bioinfo-tools star-fusion samtools
 
 #get the exons of protein coding genes
 grep -E "#|    exon    " $1 | grep -E "#|protein_coding" > transcripts.GTF
@@ -24,11 +23,8 @@ ln -s $2 genome.fa
 $STAR_FUSION_DIR/FusionFilter/util/gtf_file_to_feature_seqs.pl  transcripts.GTF genome.fa cDNA > cDNA_seqs.fa
 
 #repeatmasking
-module unload perl_modules perl
-module load bioinfo-tools RepeatMasker
 RepeatMasker -pa 6 -s -species human -xsmall cDNA_seqs.fa
 
-#module load bioinfo-tools blast
 #make the cDNA_seqs.fa file blastable
 makeblastdb -in cDNA_seqs.fa.masked -dbtype nucl
 # perform the blastn search
@@ -36,4 +32,3 @@ blastn -query cDNA_seqs.fa.masked -db cDNA_seqs.fa.masked -max_target_seqs 10000
 
 #generate star index
 $STAR_FUSION_DIR/FusionFilter/prep_genome_lib.pl --genome_fa genome.fa --gtf transcripts.GTF --blast_pairs blast_pairs.gene_syms.outfmt6.gz --cpu 16
-
