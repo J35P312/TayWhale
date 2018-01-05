@@ -25,6 +25,7 @@ if(params.help){
 
     process STAR_Aln{
         publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+        cpus 16
 
         input:
 
@@ -35,10 +36,11 @@ if(params.help){
             file "${params.sample}.Chimeric.out.junction" into junctions
             file "${params.sample}.RG.Aligned.sortedByCoord.out.bam" into bam
             file "${params.sample}.RG.Aligned.sortedByCoord.out.bam" into bai
+            file "${params.sample}.ReadsPerGene.out.tab" into geneCounts
 
         """
         
-        STAR --genomeDir ${params.ref} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}.
+        STAR --genomeDir ${params.ref} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif
 
         picard AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
         rm ${params.sample}.Aligned.sortedByCoord.out.bam
@@ -57,8 +59,44 @@ if(params.help){
             file "${params.sample}" into Fusion_dir
 
         """
-            star-Fusion --genome_lib_dir ${params.ref} -J ${junctions} --output_dir ${params.sample}
+            STAR-Fusion --genome_lib_dir ${params.ref} -J ${junctions} --output_dir ${params.sample}
         """
     }
+
+    process GATK_Split{
+        publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+        
+        input:
+            file bam
+            file bai
+
+        output:
+            file "${params.sample}.RG.split.Aligned.sortedByCoord.out.bam" into GATK_bam
+            file "${params.sample}.RG.split.Aligned.sortedByCoord.out.bam.bai" into GATK_bai
+
+        """
+        GATK -T SplitNCigarReads -R ${params.ref}/genome.fa -I ${bam}  -o ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
+        samtools index ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam
+        """
+
+    }
+
+    process GATK_ASE{
+        publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+
+        input:
+            file GATK_bam
+            file GATK_bai
+
+        output:
+            file "${params.sample}.vcf" into GATK_haplotype_vcf
+            file "${params.sample}.GATKASE.csv" into GATK_ASE_CSV
+
+        """
+        GATK -R ${params.ref}/genome.fa -T HaplotypeCaller -I ${GATK_bam} -stand_call_conf 10 -o ${params.sample}.vcf -dontUseSoftClippedBases --min_mapping_quality_score 10
+        GATK -R ${params.ref}/genome.fa -T ASEReadCounter -o ${params.sample}.GATKASE.csv -I ${GATK_bam} -sites ${params.sample}.vcf
+        """
+    }
+
 
 }
