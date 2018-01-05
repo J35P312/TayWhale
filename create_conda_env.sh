@@ -9,5 +9,6 @@ conda install -c bioconda picard --yes
 conda install -c bioconda samtools --yes
 conda install -c bioconda STAR-Fusion --yes
 conda install -c bioconda GATK --yes
+conda install -c bioconda cufflinks --yes
 
 source deactivate

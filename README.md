@@ -1,12 +1,14 @@
 # TayWhale - a RNA seq pipeline
 The TayWhale pipeline performs alignment using STAR, differetial expression analysis using Cufflinks, Fusion transcript detection using STAR-Fusion, and allele specific expression using GATK
 
-The pipeline is still bein developed!
+The pipeline is still being developed!
 
 # Command line
 Activate the conda environment
 
-        source ac
+        source activate TayWhale
+
+Next, you may run the pipeline
 
     nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory --ref STAR_reference_folder -c config
 
@@ -29,11 +31,10 @@ The script will take about one day, and will consume 30GB harddrive space. The s
 
 Visit this website if you run in to troubles creating your reference package.
 
-    Setup The conda environment:
+Next, setup The conda environment:
 
          ./create_conda_env.sh
-
-    NOTE: you need to install conda before running the script!
+NOTE: you need to install conda before running the script!
 
 The conda script will create an environment named TayWhale. If you cannot use conda to install packages, you will have to install the dependencies manually. The dependencies include:
 
