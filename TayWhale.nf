@@ -4,7 +4,7 @@ params.r2="none"
 
 if(params.help){
     println "TayWhale: a RNA-seq workflow"
-    println "Usage: nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory --ref STAR_reference_folder -c config"
+    println "Usage: nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory -c TayWhale.conf"
     println ""
     println "Optional parameters:"
     println ""
@@ -24,7 +24,7 @@ if(params.help){
 
 
     process STAR_Aln{
-        publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+        publishDir "${params.output}", mode: 'copy', overwrite: true
         cpus 16
 
         input:
@@ -35,12 +35,12 @@ if(params.help){
         output:
             file "${params.sample}.Chimeric.out.junction" into junctions
             file "${params.sample}.RG.Aligned.sortedByCoord.out.bam" into bam
-            file "${params.sample}.RG.Aligned.sortedByCoord.out.bam" into bai
+            file "${params.sample}.RG.Aligned.sortedByCoord.out.bam.bai" into bai
             file "${params.sample}.ReadsPerGene.out.tab" into geneCounts
 
         """
         
-        STAR --genomeDir ${params.ref} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif
+        STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif
 
         picard AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
         rm ${params.sample}.Aligned.sortedByCoord.out.bam
@@ -50,7 +50,7 @@ if(params.help){
     }
 
     process STAR_Fusion{
-        publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+        publishDir "${params.output}", mode: 'copy', overwrite: true
         
         input:
             file junctions
@@ -59,12 +59,12 @@ if(params.help){
             file "${params.sample}" into Fusion_dir
 
         """
-            STAR-Fusion --genome_lib_dir ${params.ref} -J ${junctions} --output_dir ${params.sample}
+            STAR-Fusion --genome_lib_dir ${params.ctat_folder} -J ${junctions} --output_dir ${params.sample}
         """
     }
 
     process GATK_Split{
-        publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+        publishDir "${params.output}", mode: 'copy', overwrite: true
         
         input:
             file bam
@@ -75,14 +75,14 @@ if(params.help){
             file "${params.sample}.RG.split.Aligned.sortedByCoord.out.bam.bai" into GATK_bai
 
         """
-        GATK -T SplitNCigarReads -R ${params.ref}/genome.fa -I ${bam}  -o ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
+        java -jar ${params.GATK} -T SplitNCigarReads -R ${params.ref} -I ${bam}  -o ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
         samtools index ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam
         """
 
     }
 
     process GATK_ASE{
-        publishDir "${params.working_dir}", mode: 'copy', overwrite: true
+        publishDir "${params.output}", mode: 'copy', overwrite: true
 
         input:
             file GATK_bam
@@ -93,8 +93,8 @@ if(params.help){
             file "${params.sample}.GATKASE.csv" into GATK_ASE_CSV
 
         """
-        GATK -R ${params.ref}/genome.fa -T HaplotypeCaller -I ${GATK_bam} -stand_call_conf 10 -o ${params.sample}.vcf -dontUseSoftClippedBases --min_mapping_quality_score 10
-        GATK -R ${params.ref}/genome.fa -T ASEReadCounter -o ${params.sample}.GATKASE.csv -I ${GATK_bam} -sites ${params.sample}.vcf
+        java -jar ${params.GATK} -R ${params.ref} -T HaplotypeCaller -I ${GATK_bam} -stand_call_conf 10 -o ${params.sample}.vcf -dontUseSoftClippedBases --min_mapping_quality_score 10
+        java -jar ${params.GATK} -R ${params.ref} -T ASEReadCounter -o ${params.sample}.GATKASE.csv -I ${GATK_bam} -sites ${params.sample}.vcf
         """
     }
 

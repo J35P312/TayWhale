@@ -10,30 +10,13 @@ Activate the conda environment
 
 Next, you may run the pipeline
 
-    nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory --ref STAR_reference_folder -c config
+    nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory -c config
 
 # Install
-Download STAR-Fusion
-        
-        https://github.com/STAR-Fusion/STAR-Fusion
-
-run the generate_STAR_resource.sh script to create your reference  package (or download a premade via the star fusion Github). Type the  following to run the script:
-
-       mkdir ref_folder
-
-       cd ref_folder
-
-       /path/generate_STAR_resource.sh genome.GTF genome.FA
-
-The script will take about one day, and will consume 30GB harddrive space. The script requires repeatmasker, samtools, and blast to be installed. You must also set the STAR_FUSION_DIR parameter on line 16. This is the path of the STAR-fusion folder. Once the script is complete, you may use ref_folder as a STAR reference package. Note: the script performs the steps described here:
-        
-        https://github.com/FusionFilter/FusionFilter/wiki/Building-a-Custom-FusionFilter-Dataset
-
-Visit this website if you run in to troubles creating your reference package.
-
-Next, setup The conda environment:
+First install the conda  environment:
 
          ./create_conda_env.sh
+
 NOTE: you need to install conda before running the script!
 
 The conda script will create an environment named TayWhale. If you cannot use conda to install packages, you will have to install the dependencies manually. The dependencies include:
@@ -46,6 +29,29 @@ The conda script will create an environment named TayWhale. If you cannot use co
 
     Picard tools
 
-    GATK
-
     CuffLinks
+
+    RepeatMasker
+
+    Blast
+
+Then activate the conda environment, and run the install script:
+
+        source activate TayWhale
+
+        ./install.sh <reference.fasta> <GTF_file> <output_dir> <max_read_length>
+
+Note the script does not apply repeatmasking, if you want to mask repeats, you could either apply the repeatmasker to the reference genome before running the script.
+
+The install script creates a folder named <output_dir> containg the indexed reference file and resources needed by the pipeline. The script also generates a config file (TayWhale.conf) this file may be edited to make the pipeline run on
+slurm etc. visit the nextflow website for more info on how to setup the config:
+
+    https://www.nextflow.io/docs/latest/config.html
+
+Lastly, enter the config file and set the path to GATK. Example:
+
+        nano TayWhale.conf
+
+And edit:    
+    
+        GATK="/sw/apps/bioinfo/GATK/3.7/GenomeAnalysisTK.jar"
