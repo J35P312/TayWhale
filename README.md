@@ -3,6 +3,8 @@ The TayWhale pipeline performs alignment using STAR, differetial expression anal
 
 The pipeline is still being developed!
 
+![TayWhale](TayWhale.jpg)
+
 # Command line
 Activate the conda environment
 
