@@ -39,9 +39,9 @@ Then activate the conda environment, and run the install script:
 
         source activate TayWhale
 
-        ./install.sh <reference.fasta> <GTF_file> <output_dir> <max_read_length>
+        python install.py <reference.fasta> <GTF_file> <output_dir> <max_read_length> > Taywhale.conf
 
-Note the script does not apply repeatmasking, if you want to mask repeats, you could either apply the repeatmasker to the reference genome before running the script.
+Note the script does not apply repeatmasking, if you want to mask repeats, you could either apply the repeatmasker to the reference genome before running the script. You need to suply the absolute path of your output directory.
 
 The install script creates a folder named <output_dir> containg the indexed reference file and resources needed by the pipeline. The script also generates a config file (TayWhale.conf) this file may be edited to make the pipeline run on
 slurm etc. visit the nextflow website for more info on how to setup the config:

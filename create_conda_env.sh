@@ -1,7 +1,7 @@
 conda config --add channels r
 conda config --add channels bioconda
 
-conda create --force -n TayWhale python=2.7
+conda create --force -n TayWhale python=2.7 scipy numpy
 source activate TayWhale
 
 conda install -c bioconda STAR --yes

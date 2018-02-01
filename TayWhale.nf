@@ -95,6 +95,8 @@ if(params.help){
         """
         java -jar ${params.GATK} -R ${params.ref} -T HaplotypeCaller -I ${GATK_bam} -stand_call_conf 10 -o ${params.sample}.vcf -dontUseSoftClippedBases --min_mapping_quality_score 10
         java -jar ${params.GATK} -R ${params.ref} -T ASEReadCounter -o ${params.sample}.GATKASE.csv -I ${GATK_bam} -sites ${params.sample}.vcf
+        python ${params.BootstrapAnn} --vcf ${params.sample}.vcf --ase ${params.sample}.GATKASE.csv >${params.sample}.GATKASE.vcf
+        ${VEP_exec_file} -i ${params.sample}.GATKASE.vcf  -o ${params.sample}.annotated.GATKASE.vcf ${params.vep_args}
         """
     }
 
