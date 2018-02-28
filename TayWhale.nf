@@ -34,7 +34,7 @@ if(params.help){
            
         output:
             file "${params.sample}.Chimeric.out.junction" into junctions
-            file "${params.sample}.RG.Aligned.sortedByCoord.out.bam" into bam
+            file "${params.sample}.RG.Aligned.sortedByCoord.out.bam" into star_bam
             file "${params.sample}.RG.Aligned.sortedByCoord.out.bam.bai" into bai
             file "${params.sample}.ReadsPerGene.out.tab" into geneCounts
 
@@ -49,6 +49,8 @@ if(params.help){
         """
     }
 
+
+    
     process STAR_Fusion{
         publishDir "${params.output}", mode: 'copy', overwrite: true
         
@@ -62,6 +64,13 @@ if(params.help){
             STAR-Fusion --genome_lib_dir ${params.ctat_folder} -J ${junctions} --output_dir ${params.sample}
         """
     }
+
+    bam=Channel.create()
+    trinity_bam=Channel.create()
+
+    Channel
+            .from star_bam
+            .separate( bam, trinity_bam){ a -> [a,a] }
 
     process GATK_Split{
         publishDir "${params.output}", mode: 'copy', overwrite: true
@@ -78,6 +87,32 @@ if(params.help){
         java -jar ${params.GATK} -T SplitNCigarReads -R ${params.ref} -I ${bam}  -o ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
         samtools index ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam
         """
+
+    }
+
+    process Trinity{
+         publishDir "${params.output}", mode: 'copy', overwrite: true
+
+         cpus 16
+
+         input:
+            file trinity_bam
+
+        output:
+
+           file "${params.sample}.Trinity-GG.fasta" into trinity_fasta
+           file "${params.sample}.Trinity-GG.fasta.gene_trans_map" into trinity_gene_trans_map
+
+        """
+            Trinity --genome_guided_bam ${trinity} --genome_guided_max_intron 10000 --max_memory 10G --CPU 16
+
+            mv trinity_out_dir/Trinity-GG.fasta ${params.sample}.Trinity-GG.fasta
+            mv trinity_out_dir/Trinity-GG.fasta.gene_trans_map ${params.sample}.Trinity-GG.fasta.gene_trans_map
+
+        """
+
+
+
 
     }
 
