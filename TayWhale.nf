@@ -1,10 +1,11 @@
 params.help=false
 params.r1="none"
 params.r2="none"
+params.libtype="ISF"
 
 if(params.help){
     println "TayWhale: a RNA-seq workflow"
-    println "Usage: nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory -c TayWhale.conf"
+    println "Usage: nextflow TayWhale.nf --r1 read1.fq.gz --r2 --read2.fq.gz --sample sampleID --output output_directory -c TayWhale.conf"
     println ""
     println "Optional parameters:"
     println ""
@@ -12,6 +13,21 @@ if(params.help){
     println "--rglb         library"
     println "--rgpl         platform"
     println "--rgpu         unit id"
+    println ""
+    println "library-info"
+    println "--libtype IU - reads poining Inward Unstranded library"
+    println "--libtype ISF - reads pointing Inward, Stranded library, first read on forward strand (default)"
+    println ""
+    println "I = inward"
+    println "O = outward"
+    println "M = matching"
+    println ""
+    println "S = stranded"
+    println "U = unstranded"
+    println ""
+    println "F = read 1 comes from the forward strand"
+    println "R = read 1 comes from the reverse strand"
+    
 
 }else{
 
@@ -21,7 +37,26 @@ if(params.help){
     r2=file(params.r2)   
     if(!r2.exists()) exit 1, "Error Missing read2 (--r2), type --help for a help message"
 
+    r1_salmon=file(params.r1)
+    r2_salmon=file(params.r2)
 
+    process salmon{
+        publishDir "${params.output}", mode: 'copy', overwrite: true
+        cpus 2
+
+        input:
+
+           file r1_salmon
+           file r2_salmon
+           
+        output:
+            file "${params.sample}.sf" into salmon_quant
+
+        """
+        salmon quant --index ${params.STAR_ref_dir}/cDNA_seqs_index --libType ${params.libtype} --output salmon_output -1 <(bunzip2 ${r1_salmon}) -2 <(bunzip2 ${r2_salmon})
+        mv salmon_output/quant.sf ${params.sample}.sf
+        """
+    } 
 
     process STAR_Aln{
         publishDir "${params.output}", mode: 'copy', overwrite: true
@@ -40,7 +75,7 @@ if(params.help){
 
         """
         
-        STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif
+        STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif --readFilesCommand gunzip -c
 
         picard AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
         rm ${params.sample}.Aligned.sortedByCoord.out.bam

@@ -17,6 +17,8 @@ os.system("unzip FusionFilterv0.4.0.zip")
 os.system("./FusionFilter-FusionFilterv0.4.0/util/gtf_file_to_feature_seqs.pl  {}/transcripts.GTF {}/genome.fa cDNA > {}/cDNA_seqs.fa".format(sys.argv[3],sys.argv[3],sys.argv[3]))
 os.system("makeblastdb -in {}/cDNA_seqs.fa -dbtype nucl".format(sys.argv[3]))
 
+os.system( "salmon index --index {}/cDNA_seqs_index --transcripts {}/cDNA_seqs.fa".format( sys.argv[3],sys.argv[3] ) )
+
 os.system("blastn -query {}/cDNA_seqs.fa -db {}/cDNA_seqs.fa -max_target_seqs 10000 -outfmt 6 -evalue 1e-3 -lcase_masking -num_threads 16 -word_size 11  >  {}/blast_pairs.outfmt6".format(sys.argv[3],sys.argv[3],sys.argv[3]))
 os.system("./FusionFilter-FusionFilterv0.4.0/prep_genome_lib.pl --genome_fa {}/genome.fa --gtf {}/transcripts.GTF --blast_pairs {}/blast_pairs.gene_syms.outfmt6.gz --cpu 16 ---output_dir {}/".format(sys.argv[3],sys.argv[3],sys.argv[3],sys.argv[3]))
 

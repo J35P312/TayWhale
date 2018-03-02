@@ -10,5 +10,6 @@ conda install -c bioconda samtools --yes
 conda install -c bioconda STAR-Fusion --yes
 conda install -c bioconda cufflinks --yes
 conda install -c bioconda trinity --yes
+conda install -c bioconda salmon --yes
 
 source deactivate
