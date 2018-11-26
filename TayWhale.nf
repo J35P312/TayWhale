@@ -1,7 +1,7 @@
 params.help=false
 params.r1="none"
 params.r2="none"
-params.libtype="ISF"
+params.libtype="A"
 
 if(params.help){
     println "TayWhale: a RNA-seq workflow"
