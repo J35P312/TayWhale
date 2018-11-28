@@ -53,7 +53,7 @@ if(params.help){
             file "${params.sample}.sf" into salmon_quant
 
         """
-        salmon quant --index ${params.salmon_index} --libType ${params.libtype} --output salmon_output -1 <(bunzip2 ${r1_salmon}) -2 <(bunzip2 ${r2_salmon})
+        salmon quant --index ${params.salmon_index} --libType ${params.libtype} --output salmon_output -1 <( zcat ${r1_salmon} ) -2 <( zcat ${r2_salmon} )
         mv salmon_output/quant.sf ${params.sample}.sf
         """
     } 
@@ -75,8 +75,9 @@ if(params.help){
 
         """
         
-        STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn <(bunzip2 ${r1}) <(bunzip2 ${r2})  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif --readFilesCommand gunzip -c
-        picard AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
+        STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif --readFilesCommand gunzip -c
+      
+        ${params.picard} AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
         rm ${params.sample}.Aligned.sortedByCoord.out.bam
 
         samtools index ${params.sample}.RG.Aligned.sortedByCoord.out.bam
@@ -134,15 +135,10 @@ if(params.help){
 
         output:
 
-           file "${params.sample}.Trinity-GG.fasta" into trinity_fasta
-           file "${params.sample}.Trinity-GG.fasta.gene_trans_map" into trinity_gene_trans_map
+           file "${trinity_bam}.fasta" into trinity_fasta
 
         """
-            Trinity --genome_guided_bam ${trinity} --genome_guided_max_intron 10000 --max_memory 10G --CPU 16
-
-            mv trinity_out_dir/Trinity-GG.fasta ${params.sample}.Trinity-GG.fasta
-            mv trinity_out_dir/Trinity-GG.fasta.gene_trans_map ${params.sample}.Trinity-GG.fasta.gene_trans_map
-
+            Trinity --genome_guided_bam ${trinity_bam} --genome_guided_max_intron 10000 --max_memory 10G --CPU 16
         """
 
 
