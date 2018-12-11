@@ -1,5 +1,5 @@
 # TayWhale - a RNA seq pipeline
-The TayWhale pipeline performs alignment using STAR, transript quantification using Salmon, Fusion transcript detection using STAR-Fusion, genome guided transcriptome asssembly using Trinity,  and allele specific expression using GATK,
+The TayWhale pipeline performs alignment using STAR, transript quantification using Salmon, Fusion transcript detection using STAR-Fusion,  and allele specific expression using GATK,
 
 The pipeline is still being developed!
 
@@ -30,8 +30,6 @@ The conda script will create an environment named TayWhale. If you cannot use co
     Samtools
 
     Picard tools
-
-    CuffLinks
 
     RepeatMasker
 

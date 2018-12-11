@@ -143,28 +143,6 @@ if(params.help){
 
     }
 
-    process Trinity{
-         publishDir "${params.output}", mode: 'copy', overwrite: true
-
-         cpus 16
-
-         input:
-            file trinity_bam
-
-        output:
-
-           file "${trinity_bam}.fasta" into trinity_fasta
-
-        """
-            Trinity --genome_guided_bam ${trinity_bam} --genome_guided_max_intron 10000 --max_memory 10G --CPU 16
-            mv trinity_out_dir/Trinity-GG.fasta "${trinity_bam}.fasta"
-        """
-
-
-
-
-    }
-
     process GATK_ASE{
         publishDir "${params.output}", mode: 'copy', overwrite: true
 

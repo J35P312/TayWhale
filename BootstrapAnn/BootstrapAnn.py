@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 import numpy
 import argparse
 import scipy.stats
@@ -23,7 +24,8 @@ def non_param_test(total_count,alt_count,n,all_variants):
 parser = argparse.ArgumentParser("""Add bootstrap and binomial P values to a vcf file, the output vcf is printed to stdout""")
 parser.add_argument('--vcf'        ,required = True, type=str, help="vcf file")
 parser.add_argument('--ase'        ,required = True, type=str, help="GATK-ASE file (needs to be generated using the input vcf)")
-parser.add_argument('-n'        ,type=int,default=10000, help="permutations")
+parser.add_argument('-m'        ,type=int, default=10, help="minimum variant support")
+parser.add_argument('-n'        ,type=int,default=1000, help="permutations")
 args = parser.parse_args()
 
 ase_list={}
@@ -39,7 +41,10 @@ for line in open(args.ase):
         ase_list[content[0]] = {}
     if not content[1] in ase_list[content[0]]:
         ase_list[content[0]][content[1]]={}
-  
+
+    if int(content[7]) < args.m:
+        continue 
+
     p_bin=scipy.stats.binom_test(int(content[6]), n=int(content[7]), p=0.5)
     ase_list[content[0]][content[1]][content[4]]={ "ref_count":int(content[5]),"alt_count":int(content[6]),"tot_count":int(content[7]),"p_bin":p_bin,"non_param":0}
     all_variants.append([int(content[6]),int(content[7])])
@@ -57,7 +62,7 @@ for chromosome in ase_list:
 for line in open(args.vcf):
     if line[0] == "#":
         if not line[1] == "#":
-            print ("##INFO=<ID=BootstrapAnn,Number=2,Type=Float,Description=\"BootstrapAnn p-values and GATK-ASEcounter stats (alt_count,total_count,binomial,nonparametric)\">")
+            print ("##FORMAT=<ID=BT,Number=4,Type=Float,Description=\"BootstrapAnn p-values and GATK-ASEcounter stats (alt_count,total_count,binomial,nonparametric)\">")
         print line.strip()
         continue
 
@@ -65,8 +70,17 @@ for line in open(args.vcf):
     if content[0] in ase_list:
         if content[1] in ase_list[content[0]]:
             if content[4] in ase_list[content[0]][content[1]]:
-                content[7]+= ";BootstrapAnn={},{},{},{}".format(ase_list[content[0]][content[1]][content[4]]["alt_count"],ase_list[content[0]][content[1]][content[4]]["tot_count"],ase_list[content[0]][content[1]][content[4]]["p_bin"],ase_list[content[0]][content[1]][content[4]]["non_param"])
+                content[8]+= ":BT"
+
+                if ase_list[content[0]][content[1]][content[4]]["tot_count"] < 1:
+                   print line.strip()
+                   continue
+      
+                bin_p="{}".format(round(float(ase_list[content[0]][content[1]][content[4]]["p_bin"]),5))
+                non_param_p="{}".format(round( float(ase_list[content[0]][content[1]][content[4]]["non_param"]) ,5))
+
+                content[9]+=":{},{},{},{}".format(ase_list[content[0]][content[1]][content[4]]["alt_count"],ase_list[content[0]][content[1]][content[4]]["tot_count"],bin_p,non_param_p)
                 print "\t".join(content)
                 continue
 
-    print line.strip()
+print line.strip()
