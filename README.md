@@ -7,11 +7,7 @@ The pipeline is still being developed!
 
 
 # Command line
-Activate the conda environment
-
-        source activate TayWhale
-
-Next, you may run the pipeline
+The output of each tool will be stored in the <ouput_directory>
 
     nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory -c config
 
