@@ -1,9 +1,10 @@
 # TayWhale - a RNA seq pipeline
-The TayWhale pipeline performs alignment using STAR, transript quantification using Salmon, Fusion transcript detection using STAR-Fusion,  and allele specific expression using GATK,
+The TayWhale pipeline performs alignment using STAR, transript quantification using Salmon, Fusion transcript detection using STAR-Fusion, transcript assembly using Sringie, and allele specific expression using GATK.
+
 
 The pipeline is still being developed!
 
-![TayWhale](TayWhale.jpg)
+
 
 # Command line
 Activate the conda environment
@@ -15,13 +16,7 @@ Next, you may run the pipeline
     nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory -c config
 
 # Install
-First install the conda  environment:
-
-         ./create_conda_env.sh
-
-NOTE: you need to install conda before running the script!
-
-The conda script will create an environment named TayWhale. If you cannot use conda to install packages, you will have to install the dependencies manually. The dependencies include:
+Install the dependencies:
 
     STAR
     
@@ -31,29 +26,25 @@ The conda script will create an environment named TayWhale. If you cannot use co
 
     Picard tools
 
-    RepeatMasker
+	sringtie
+	
+	gffcompare
 
-    Blast
+	salmon
 
-    Trinity
+	GATK
 
-Then activate the conda environment, and run the install script:
+	python 2.7
 
-        source activate TayWhale
+Create indexes for salmon, star fusion, and star, remember to generate genome dictionary and fasta index files!
 
-        python install.py <reference.fasta> <GTF_file> <output_dir> <max_read_length> > Taywhale.conf
+run the install script to generate a config file:
 
-Note the script does not apply repeatmasking, if you want to mask repeats, you could either apply the repeatmasker to the reference genome before running the script. You need to suply the absolute path of your output directory.
+python install.py
 
-The install script creates a folder named <output_dir> containg the indexed reference file and resources needed by the pipeline. The script also generates a config file (TayWhale.conf) this file may be edited to make the pipeline run on
-slurm etc. visit the nextflow website for more info on how to setup the config:
-
-    https://www.nextflow.io/docs/latest/config.html
-
-Lastly, enter the config file and set the path to GATK. Example:
+Lastly, enter the config file and set the path variables:
 
         nano TayWhale.conf
 
-And edit:    
-    
-        GATK="/sw/apps/bioinfo/GATK/3.7/GenomeAnalysisTK.jar"
+
+![TayWhale](TayWhale.jpg)
