@@ -9,7 +9,7 @@ The pipeline is still being developed!
 # Command line
 The output of each tool will be stored in the <ouput_directory>
 
-    nextflow TayWhale.nf --r1 read1.fq --r2 --read2.fq --sample sampleID --output output_directory -c config
+    nextflow TayWhale.nf --r1 read1.fq.gz --r2 --read2.fq.gz --sample sampleID --output output_directory -c config
 
 # Install
 Install the dependencies:
