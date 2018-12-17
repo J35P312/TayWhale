@@ -53,7 +53,7 @@ if(params.help){
             file "${params.sample}.sf" into salmon_quant
 
         """
-        salmon quant --index ${params.salmon_index} --libType ${params.libtype} --output salmon_output -1 <( zcat ${r1_salmon} ) -2 <( zcat ${r2_salmon} )
+        singularity exec ${params.taywhale} salmon quant --index ${params.salmon_index} --libType ${params.libtype} --output salmon_output -1 <( zcat ${r1_salmon} ) -2 <( zcat ${r2_salmon} )
         mv salmon_output/quant.sf ${params.sample}.sf
         """
     } 
@@ -75,12 +75,12 @@ if(params.help){
 
         """
         
-        STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif --readFilesCommand gunzip -c
+        singularity exec ${params.taywhale} STAR --genomeDir ${params.STAR_ref_dir} --readFilesIn ${r1} ${r2}  --twopassMode Basic --outReadsUnmapped None --chimSegmentMin 12 --chimJunctionOverhangMin 12 --alignSJDBoverhangMin 10 --alignMatesGapMax 100000 --alignIntronMax 100000 --chimSegmentReadGapMax parameter 3 --alignSJstitchMismatchNmax 5 -1 5 5 --runThreadN 16 --limitBAMsortRAM 31532137230 --outSAMtype BAM SortedByCoordinate --outFileNamePrefix ${params.sample}. --quantMode GeneCounts --outSAMstrandField intronMotif --readFilesCommand gunzip -c
       
-        ${params.picard} AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
+        singularity exec ${params.taywhale} picard AddOrReplaceReadGroups I= ${params.sample}.Aligned.sortedByCoord.out.bam  O= ${params.sample}.RG.Aligned.sortedByCoord.out.bam RGLB=${params.rglb} RGPL=${params.rgpl} RGPU=${params.rgpu} RGSM=${params.sample}
         rm ${params.sample}.Aligned.sortedByCoord.out.bam
 
-        samtools index ${params.sample}.RG.Aligned.sortedByCoord.out.bam
+        singularity exec ${params.taywhale} samtools index ${params.sample}.RG.Aligned.sortedByCoord.out.bam
         """
     }
 
@@ -96,7 +96,7 @@ if(params.help){
             file "${params.sample}" into Fusion_dir
 
         """
-            STAR-Fusion --genome_lib_dir ${params.ctat_folder} -J ${junctions} --output_dir ${params.sample}
+            singularity exec ${params.taywhale} STAR-Fusion --genome_lib_dir ${params.ctat_folder} -J ${junctions} --output_dir ${params.sample}
         """
     }
 
@@ -120,7 +120,7 @@ if(params.help){
 
         """
         java -jar ${params.GATK} -T SplitNCigarReads -R ${params.ref} -I ${bam}  -o ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
-        samtools index ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam
+        singularity exec ${params.taywhale} samtools index ${params.sample}.RG.split.Aligned.sortedByCoord.out.bam
         """
 
     }
@@ -141,8 +141,8 @@ if(params.help){
            file "${stringtie_bam}.annotated.gtf" into annotated_gff
 
         """
-        stringtie ${stringtie_bam} -G ${params.gff} > ${stringtie_bam}.stringtie.gff
-        ${params.gffcompare} -r ${params.gff} -o ${stringtie_bam} ${stringtie_bam}.stringtie.gff
+        singularity exec ${params.taywhale} stringtie ${stringtie_bam} -G ${params.gff} > ${stringtie_bam}.stringtie.gff
+        singularity exec ${params.taywhale} gffcompare -r ${params.gff} -o ${stringtie_bam} ${stringtie_bam}.stringtie.gff
         """
 
     }
