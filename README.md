@@ -12,6 +12,7 @@ The output of each tool will be stored in the <ouput_directory> (note, the fastq
 Install the dependencies:
 
 	singularity
+	nextflow
 	vep
 	python 2.7, numpy, scikit
 	GATK
