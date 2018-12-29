@@ -1,8 +1,6 @@
 # TayWhale - a RNA seq pipeline
 The TayWhale pipeline performs alignment using STAR, transript quantification using Salmon, Fusion transcript detection using STAR-Fusion, transcript assembly using Sringie, and allele specific expression using GATK.
 
-The pipeline is still being developed!
-
 # Command line
 The output of each tool will be stored in the <ouput_directory> (note, the fastqs must be gziped)
 
